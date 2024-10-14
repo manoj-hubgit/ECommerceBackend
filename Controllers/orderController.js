@@ -1,59 +1,59 @@
 import Order from "../Models/orderModel.js";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import sendConfirmationEmail from "../Services/nodemailer.js";
 
 dotenv.config();
 
 export const order = async (req, res) => {
-  const { orderItems, paymentMethod, totalPrice, customerDetails } = req.body;
-  if (!orderItems || !totalPrice || !customerDetails || !paymentMethod) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-  const user=req.user;
-  if (!req.user || !req.user._id) {
-    return res.status(401).json({ error: 'User not authenticated' });
-  }
-  if(!user){
-    return res.status(401).json({ error: "User not authenticated" });
-  }
-  if (!orderItems || orderItems.length === 0) {
-    return res.status(400).json({ message: "No Items Selected" });
-  }
-
   try {
+    console.log(req.body);
+    const { orderItems, paymentMethod, totalPrice, customerDetails } = req.body;
+    if (!orderItems || !paymentMethod || !customerDetails || !totalPrice) {
+      return res.status(400).json({ message: "Invalid order data" });
+    }
+
+    console.log("this is my userId: ", req.user.id);
     const order = new Order({
       orderItems,
-      paymentMethod,
       totalPrice,
       customerDetails,
-      user: user._id,
+      paymentMethod,
+      user: req.user.id,
     });
-    const createdOrder = await order.save();
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.PASSMAIL,
-        pass: process.env.PASSKEY,
-      },
-    });
-    const mailOptions = {
-      from: process.env.PASSMAIL,
-      to: process.env.PASSMAIL,
-      subject: "New order Placed",
-      text: `Thank you for your order! An order has been placed for a total of RS.${totalPrice}.`,
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log(error);
-        return res.status(500).json({ message: "Order placed but failed to send email." });
-      } else {
-        console.log("Email sent: " + info.response);
-      }
-    });
-    res.status(200).json({ result: createdOrder });
+    const savedOrder = await order.save();
+    // const userEmail=req.user.email;
+    // await sendConfirmationEmail(userEmail,{
+    //   orderItems:savedOrder.orderItems,
+    //   totalPrice:savedOrder.totalPrice,
+    // })
+    res.status(200).json({ message: "Order placed successfully", savedOrder });
   } catch (error) {
-    console.error("Error details:", error);
+    console.error("Error placing order:", error);
     res.status(500).json({ message: "Error placing order. Try again later " });
   }
 };
+
+export const orderDisplay = async (req, res) => {
+  try {
+    const orders = await Order.find({})
+      .populate("orderItems.product", "name price")
+      .populate("user", "name email");
+    res.status(200).json({ message: "order is Displaying successfully",orders});
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching orders"});
+  }
+};
+
+export const packedStatus = async(req,res)=>{
+  try {
+    const orderId = req.params.id;
+    const order = await Order.findById(orderId);
+    if(!order){
+      return res.status(404).json({ message: "Order not found" });
+    } 
+    order.packed=true;
+    await order.save();
+  } catch (error) {
+    res.status(500).json({ message: "Error updating packed status"});
+  }
+}

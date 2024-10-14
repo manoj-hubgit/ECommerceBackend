@@ -2,15 +2,18 @@ import Product from "../Models/productModel.js";
 import cloudinary from "../Services/cloudinary.js";
 
 export const addProduct= async(req,res)=>{
-    const { name, description, price, stock, image } = req.body;
+    const { name, description, price, stock, image,category } = req.body;
 
     try {
         const result=await cloudinary.uploader.upload(image,{folder:'products'});
+        console.log(result); 
         const product=new Product({name,
             description,
             price,
             stock,
-            imageUrl: result.secure_url,});
+            category,
+            imageUrl: result.secure_url,
+        });
             await product.save();  
             res.status(200).json({message:"Product added successfully"})
     } catch (error) {

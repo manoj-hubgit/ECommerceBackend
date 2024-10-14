@@ -12,7 +12,7 @@ export const middleWare=(req,res,next)=>{
         if(err){
             return res.status(400).json({message:"Unauthorized Access"})
         }
-        req.user=user; //just sending user using req.user
+        req.user=user;
         next();
     })
 }
