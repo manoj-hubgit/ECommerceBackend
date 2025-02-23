@@ -112,6 +112,7 @@ export const order = async (req, res) => {
         message: "Order created successfully",
         orderId: savedOrder._id,
         razorpayOrderId: razorpayOrder.id,
+        key: process.env.RAZORPAY_KEY_ID, 
         amount: options.amount,
         currency: options.currency,
       });
