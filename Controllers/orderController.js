@@ -63,9 +63,6 @@ import dotenv from "dotenv";
 import sendConfirmationEmail from "../Services/nodemailer.js";
 import Razorpay from "razorpay";
 import crypto from "crypto";
-import path from "path";
-
-dotenv.config({ path: path.resolve(".env") });
 
 dotenv.config();
 console.log("Razorpay Key ID:", process.env.RAZORPAY_KEY_ID);
